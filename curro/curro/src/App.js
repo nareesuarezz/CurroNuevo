@@ -1,25 +1,46 @@
 import React, { useState } from 'react';
-import Tesseract from 'tesseract.js';
 
 function App() {
   const [dni, setDni] = useState(null);
   const [preview, setPreview] = useState(null);
 
-
-  
-  const scanDni = async (image) => {
-    const result = await Tesseract.recognize(
-      image,
-      'spa',
-      { logger: m => console.log(m) }
-    );
-    setDni(result.data.text);
-  };
-
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     setPreview(URL.createObjectURL(file));
-    scanDni(file);
+
+    // Crear un objeto FormData para enviar la imagen al servidor
+    const formData = new FormData();
+    formData.append('image', file);
+
+    // Hacer una solicitud POST al servidor para procesar la imagen y realizar OCR
+    const response = await fetch('http://localhost:3001/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al procesar la imagen');
+    }
+
+    // Obtener el texto reconocido del servidor
+    const text = await response.text();
+
+    // Extraer el DNI, los apellidos y el nombre del texto
+    const dniRegex = /DNI (\d+)/;
+    const apellidosRegex = /APELLIDOS - ([^=]+)/;
+    const nombreRegex = /NOMBRE — b: ([^ ]+)/;
+
+    const dniMatch = text.match(dniRegex);
+    const dni = dniMatch ? dniMatch[1] : 'No encontrado';
+
+    const apellidosMatch = text.match(apellidosRegex);
+    const apellidos = apellidosMatch ? apellidosMatch[1] : 'No encontrado';
+
+    const nombreMatch = text.match(nombreRegex);
+    const nombre = nombreMatch ? nombreMatch[1] : 'No encontrado';
+
+    // Mostrar el DNI, los apellidos y el nombre
+    setDni(`DNI: ${dni}, Apellidos: ${apellidos}, Nombre: ${nombre}`);
   };
 
   return (
