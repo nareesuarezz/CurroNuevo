@@ -47,7 +47,7 @@ function App() {
     const nombreIndex = words.indexOf('NOMBRE');
     const nombre = nombreIndex !== -1 ? words[nombreIndex + 2] : 'No encontrado';
     
-    setDni(text);
+    setDni(`DNI: ${dni}, Apellidos: ${apellidos}, Nombre: ${nombre}`);
     console.log(apellidos);
   }    
 
